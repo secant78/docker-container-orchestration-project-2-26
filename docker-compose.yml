@@ -38,9 +38,13 @@ services:
 
   db:
     image: postgres:15-alpine
+    # Merged Secrets and Environment Logic
+    secrets:
+      - db_password
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password123}
+      # Use the file for the password to meet secrets requirements
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password 
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -67,3 +71,8 @@ networks:
 
 volumes:
   pg_data:
+
+# Top-level secrets definition
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
