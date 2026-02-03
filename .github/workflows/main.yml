@@ -1,0 +1,38 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Start Services
+        run: docker compose up -d --build
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_DB: myapp
+          # Secrets can be passed here during CI
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }} 
+
+      - name: Wait for Services
+        run: |
+          timeout 60s bash -c 'until docker compose exec -T db pg_isready; do sleep 2; done'
+
+      - name: Run Backend Health Check
+        run: |
+          curl -v http://localhost:3000/health || exit 1
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
