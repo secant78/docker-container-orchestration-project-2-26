@@ -10,11 +10,22 @@ services:
       - backend
     networks:
       - public_net
+    # Monitoring: Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build: ./frontend
     networks:
       - public_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backend:
     build: ./backend
@@ -35,15 +46,21 @@ services:
         limits:
           cpus: '0.50'
           memory: 512M
+    # Monitoring: Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   db:
     image: postgres:15-alpine
-    # Merged Secrets and Environment Logic
+    # Secrets Management implementation
     secrets:
       - db_password
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      # Use the file for the password to meet secrets requirements
+      # Instructs Postgres to use the secure secret file for the password
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password 
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
@@ -67,12 +84,12 @@ networks:
   public_net:
     driver: bridge
   private_net:
-    internal: true
+    internal: true # Networking: Internal backend isolation
 
 volumes:
-  pg_data:
+  pg_data: # Data Persistence: Named volume for database
 
-# Top-level secrets definition
+# Secrets Management: Top-level definition
 secrets:
   db_password:
     file: ./secrets/db_password.txt
