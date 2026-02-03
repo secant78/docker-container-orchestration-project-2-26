@@ -10,8 +10,13 @@ COPY . .
 FROM node:20-alpine
 WORKDIR /app
 
-# Security: Run as non-root user
+# 1. Create the user and group
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# 2. Change ownership of the workdir to the new user
+RUN chown -R appuser:appgroup /app
+
+# 3. NOW switch to the non-root user
 USER appuser
 
 COPY --from=builder /app/package*.json ./
